@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class CameraModeToggle : MonoBehaviour
-{    
+{
     [SerializeField]
     private bool m_EnableStereoRender = false;
+    [SerializeField]
+    private bool m_EnableAlternateEyeRender = false;
 
     [SerializeField]
     private GameObject m_2DCamera;
@@ -17,7 +20,7 @@ public class CameraModeToggle : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -53,11 +56,30 @@ public class CameraModeToggle : MonoBehaviour
 
     public void ToggleRenderMode()
     {
-        m_EnableStereoRender = !m_EnableStereoRender;
+        if (!m_EnableStereoRender && !m_EnableAlternateEyeRender)
+        {
+            m_EnableAlternateEyeRender = false;
+            m_EnableStereoRender = true;
+        }
+        else if (m_EnableStereoRender)
+        {
+            m_EnableStereoRender = false;
+            m_EnableAlternateEyeRender = true;
+        }
+        else if (m_EnableAlternateEyeRender)
+        {
+            m_EnableStereoRender = false;
+            m_EnableAlternateEyeRender = false;
+        }
     }
 
     public bool StereoRenderMode()
     {
         return m_EnableStereoRender;
+    }
+
+    public bool AlternateEyeRenderMode()
+    {
+        return m_EnableAlternateEyeRender;
     }
 }

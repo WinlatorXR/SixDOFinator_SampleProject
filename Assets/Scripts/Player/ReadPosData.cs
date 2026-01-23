@@ -11,9 +11,6 @@ using UnityEngine;
 public class ReadPosData : MonoBehaviour
 {
     [SerializeField]
-    private bool m_UDPOnly = false;
-
-    [SerializeField]
     private CameraModeToggle m_CameraModeToggle;
 
     [SerializeField]
@@ -24,9 +21,13 @@ public class ReadPosData : MonoBehaviour
     private Transform m_PlayerHandR;
 
     [SerializeField]
+    private Transform m_PlayerEye2D;
+    [SerializeField]
     private Transform m_PlayerEyeL;
     [SerializeField]
     private Transform m_PlayerEyeR;
+
+    private bool aerLeftEye = false;
 
     [SerializeField]
     private string m_DataDirectory = "";
@@ -99,9 +100,6 @@ public class ReadPosData : MonoBehaviour
     private bool btnRThumbUp = false;
     private bool btnRThumbDown = false;
     private bool btnRTrigger = false;
-
-    private bool firstStereoCheck = true;
-    private bool lastStereoStatus = false;
 
     private bool lockFrameData = false;
 
@@ -219,14 +217,6 @@ public class ReadPosData : MonoBehaviour
             }
         }
 
-        string vrFile = m_DataDirectory + "/vr";
-
-        if (!File.Exists(vrFile))
-        {
-            FileStream fs = File.Create(vrFile);
-            fs.Close();
-        }
-
         string systemFile = m_DataDirectory + "/system";
 
         if (File.Exists(systemFile))
@@ -246,7 +236,7 @@ public class ReadPosData : MonoBehaviour
             }
 
             if (currentHMD.ToUpper() == "OCULUS") currentHMD = "META"; //Hard fix for new brand
-            
+
         }
 
         if (m_OpenXRFrameIDFlat == null)
@@ -274,12 +264,7 @@ public class ReadPosData : MonoBehaviour
 
     private void On_Application_quitting()
     {
-        string vrFile = m_DataDirectory + "/vr";
 
-        if (File.Exists(vrFile))
-        {
-            File.Delete(vrFile);
-        }
     }
 
     // Update is called once per frame
@@ -288,32 +273,6 @@ public class ReadPosData : MonoBehaviour
         if (dirExists || Directory.Exists(m_DataDirectory))
         {
             dirExists = true;
-
-            if (m_CameraModeToggle != null && (firstStereoCheck || m_CameraModeToggle.StereoRenderMode() != lastStereoStatus))
-            {
-                if (m_CameraModeToggle.StereoRenderMode())
-                {
-                    string sbsFile = m_DataDirectory + "/sbs";
-
-                    if (!File.Exists(sbsFile))
-                    {
-                        FileStream fs = File.Create(sbsFile);
-                        fs.Close();
-                    }
-                }
-                else
-                {
-                    string sbsFile = m_DataDirectory + "/sbs";
-
-                    if (File.Exists(sbsFile))
-                    {
-                        File.Delete(sbsFile);
-                    }
-                }
-
-                firstStereoCheck = false;
-                lastStereoStatus = m_CameraModeToggle.StereoRenderMode();
-            }
 
             if (m_PlayerHandL != null)
             {
@@ -470,6 +429,8 @@ public class ReadPosData : MonoBehaviour
 
             if (IsSBS()) sbsFlag = "1";
 
+            if (IsAER()) sbsFlag = "2";
+
             UDPSender.SendHapticVibration(LControllerVibration, RControllerVibration, sbsFlag);
 
             if (LControllerVibration > 0) LControllerVibration -= 0.5f * Time.deltaTime;
@@ -545,112 +506,23 @@ public class ReadPosData : MonoBehaviour
         lockFrameData = true;
         lastFrameID = currFrameID;
 
-        //Legacy method of getting data, read from a file in the xrtemp folder
-        if (dirExists && !m_UDPOnly)
+        if (m_PlayerEye2D != null && IsAER())
         {
-            IEnumerable<string> files = Directory.EnumerateFiles(m_DataDirectory);
+            aerLeftEye = !aerLeftEye;
 
-            foreach (string file in files)
+            if (aerLeftEye)
             {
-                if (file.Length > 3)
-                {
-                    //Not the /sbs or /vr files
-                    string[] parts = Path.GetFileName(file).Split(' ');
-
-                    string btnbools = "";
-
-                    if (parts[0] == "client0")
-                    {
-                        int i = 1;
-                        int maxParts = parts.Length - 1;
-
-                        if (maxParts >= i) UpdateValue(ref currLHandQX, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currLHandQY, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currLHandQZ, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currLHandQW, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currLThumbX, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currLThumbY, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currLHandX, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currLHandY, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currLHandZ, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRHandQX, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRHandQY, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRHandQZ, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRHandQW, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRThumbX, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRThumbY, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRHandX, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRHandY, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currRHandZ, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currHMDQX, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currHMDQY, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currHMDQZ, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currHMDQW, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currHMDX, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currHMDY, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currHMDZ, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currIPD, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currFOVH, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValue(ref currFOVV, TryParseStr(parts[i]));
-                        i++;
-                        if (maxParts >= i) UpdateValueInt(ref currFrameID, TryParseStrToInt(parts[i]));
-                        i++;
-                        if (maxParts >= i) btnbools = parts[i];
-                        //i++;
-                        //if (maxParts >= i) currentHMD = parts[i]; //No longer part of data stream
-                    }
-
-                    if (btnbools != "")
-                    {
-                        btnLGrip = ParseBtnBool(btnbools, 0);
-                        btnLMenu = ParseBtnBool(btnbools, 1);
-                        btnLThumbClick = ParseBtnBool(btnbools, 2);
-                        btnLThumbLeft = ParseBtnBool(btnbools, 3);
-                        btnLThumbRight = ParseBtnBool(btnbools, 4);
-                        btnLThumbUp = ParseBtnBool(btnbools, 5);
-                        btnLThumbDown = ParseBtnBool(btnbools, 6);
-                        btnLTrigger = ParseBtnBool(btnbools, 7);
-                        btnX = ParseBtnBool(btnbools, 8);
-                        btnY = ParseBtnBool(btnbools, 9);
-                        btnA = ParseBtnBool(btnbools, 10);
-                        btnB = ParseBtnBool(btnbools, 11);
-                        btnRGrip = ParseBtnBool(btnbools, 12);
-                        btnRThumbClick = ParseBtnBool(btnbools, 13);
-                        btnRThumbLeft = ParseBtnBool(btnbools, 14);
-                        btnRThumbRight = ParseBtnBool(btnbools, 15);
-                        btnRThumbUp = ParseBtnBool(btnbools, 16);
-                        btnRThumbDown = ParseBtnBool(btnbools, 17);
-                        btnRTrigger = ParseBtnBool(btnbools, 18);
-                    }
-                }
+                m_PlayerEye2D.transform.localPosition = new Vector3(currIPD * 0.5f * -1f, 0f, 0f);
             }
+            else
+            {
+                m_PlayerEye2D.transform.localPosition = new Vector3(currIPD * 0.5f, 0f, 0f);
+            }
+        }
+        else
+        {
+            m_PlayerEye2D.transform.localPosition = Vector3.zero;
+            aerLeftEye = false;
         }
 
         if (m_PlayerEyeL != null && m_PlayerEyeR != null)
@@ -668,7 +540,21 @@ public class ReadPosData : MonoBehaviour
 
         if (openXRFrameMatFlat != null)
         {
-            openXRFrameMatFlat.color = new Color32((byte)currFrameID, 0, 0, 1);
+            if (IsAER())
+            {
+                if (aerLeftEye)
+                {
+                    openXRFrameMatFlat.color = new Color32((byte)currFrameID, 0, 0, 1);
+                }
+                else
+                {
+                    openXRFrameMatFlat.color = new Color32((byte)currFrameID, 0, 255, 1);
+                }
+            }
+            else
+            {
+                openXRFrameMatFlat.color = new Color32((byte)currFrameID, 0, 0, 1);
+            }
         }
     }
 
@@ -787,7 +673,17 @@ public class ReadPosData : MonoBehaviour
             return m_CameraModeToggle.StereoRenderMode();
         }
 
-        return lastStereoStatus;
+        return false;
+    }
+
+    public bool IsAER()
+    {
+        if (m_CameraModeToggle != null)
+        {
+            return m_CameraModeToggle.AlternateEyeRenderMode();
+        }
+
+        return false;
     }
 }
 

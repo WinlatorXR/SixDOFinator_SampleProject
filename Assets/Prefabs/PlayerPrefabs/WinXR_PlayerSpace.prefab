@@ -1219,11 +1219,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09aa2fd6f244a3d43bf4768cc7ee8c3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UDPOnly: 1
   m_CameraModeToggle: {fileID: 8059935983309531001}
   m_PlayerHead: {fileID: 1724959254888491626}
   m_PlayerHandL: {fileID: 5752129478424323452}
   m_PlayerHandR: {fileID: 8551190224172500639}
+  m_PlayerEye2D: {fileID: 3255320866090378663}
   m_PlayerEyeL: {fileID: 6465952671421016744}
   m_PlayerEyeR: {fileID: 130686694460551675}
   m_DataDirectory: 
@@ -1237,6 +1237,10 @@ MonoBehaviour:
   debugLogButtonInputs: 0
   HMDAdjusts: []
   currentHMD: META
+  currentHMDModel: EUREKA
+  UDPSender: {fileID: 0}
+  LControllerVibration: 0
+  RControllerVibration: 0
 --- !u!114 &2556998891053683222
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2312,6 +2316,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_EnableStereoRender: 0
+  m_EnableAlternateEyeRender: 0
   m_2DCamera: {fileID: 4920932286278790367}
   m_StereoCameraL: {fileID: 6932338999141882603}
   m_StereoCameraR: {fileID: 2472481895881062183}
