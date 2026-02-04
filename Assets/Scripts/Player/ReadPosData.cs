@@ -155,6 +155,11 @@ public class ReadPosData : MonoBehaviour
 
             HMDSpecificAdjustment quest3SHMD = new HMDSpecificAdjustment("META", "PANTHER");
             HMDAdjusts.Add(quest3SHMD);
+
+            //Play For Dream:
+            HMDSpecificAdjustment pfdHMD = new HMDSpecificAdjustment("PLAY FOR DREAM");
+            pfdHMD.FlipHandZRot = true;
+            HMDAdjusts.Add(pfdHMD);
         }
 
         Cursor.visible = false;
